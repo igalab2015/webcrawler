@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2 class="page-header">News</h2>
+<ul class="url_list">
+  <p>Title</p>
+  {% for ele in index %}
+    <li style="list-style:none">
+      <span class="content">
+           <a href= "{{ ele.url }}">
+             {{ ele.title }}
+           </a>
+      </span>
+    </li>
+  {% endfor %}
+</ul>
+{% endblock content %}

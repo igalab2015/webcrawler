@@ -1,0 +1,29 @@
+[
+{
+  "model": "crawler.url_list",
+  "pk": 1,
+  "fields": {
+    "name": "http://qiita.com/kaki_k/items/7b178ad39394a031b50d",
+    "title": "Python Django\u5165\u9580 (3) - Qiita",
+    "tags": "python"
+  }
+},
+{
+  "model": "crawler.url_list",
+  "pk": 2,
+  "fields": {
+    "name": "http://test.com",
+    "title": "test",
+    "tags": "test"
+  }
+},
+{
+  "model": "crawler.url_list",
+  "pk": 3,
+  "fields": {
+    "name": "http://test2.com",
+    "title": "test2",
+    "tags": "test2"
+  }
+}
+]
