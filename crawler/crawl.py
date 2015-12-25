@@ -2,15 +2,25 @@ import urllib.request
 from bs4 import BeautifulSoup
 from crawler.models import Url_list
 import re
+from threading import Thread
+import time
 
-class Crawler(object):
+class Crawler(Thread):
 
     titles_and_urls = []
     words_about_security = ['マルウェア']
     patterns = [re.compile(word) for word in words_about_security]
 
-    def __init__(self):
-        pass
+    def __init__(self, target_url, max_depth):
+        super(Crawler, self).__init__()
+        self.target_url = target_url
+        self.max_depth = max_depth
+
+    def run(self):
+        while True:
+            self.crawl(self.target_url, self.max_depth)
+            self.get_titles_and_urls()
+            time.sleep(10)
 
     def jubge_url(self, url):
         if url[0:4] == 'http' and url[-5:] == '.html':
