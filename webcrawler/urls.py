@@ -27,7 +27,7 @@ urlpatterns = [
 ]
 
 target_url = "http://b.hatena.ne.jp/search/text?q=%E3%82%BB%E3%82%AD%E3%83%A5%E3%83%AA%E3%83%86%E3%82%A3"
-max_depth = 1
+max_depth = 2
 hatena = Crawler(target_url, max_depth)
 hatena.start()
 

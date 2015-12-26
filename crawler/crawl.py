@@ -1,13 +1,14 @@
 import urllib.request
 from bs4 import BeautifulSoup
-from crawler.models import Url_list
+from crawler.models import Url_list, Crawled_url_list
+# from crawler.models import Crawled_url_list
 import re
 from threading import Thread
 import time
 
 class Crawler(Thread):
 
-    titles_and_urls = []
+    # titles_and_urls = []
     words_about_security = ['マルウェア']
     patterns = [re.compile(word) for word in words_about_security]
 
@@ -38,7 +39,8 @@ class Crawler(Thread):
         except:
             return links
         soup = BeautifulSoup(f, "html.parser")
-        self.titles_and_urls.append((soup.title.string, page))
+        # self.titles_and_urls.append((soup.title.string, page))
+        self.set_crawled_urls_and_titles(soup.title.string, page)
         for atag in soup.find_all('a'):
             link = atag.get('href')
             if not link:
@@ -46,6 +48,15 @@ class Crawler(Thread):
             if self.jubge_url(link):
                 links.append(link)
         return links
+
+    def set_crawled_urls_and_titles(self, title, page):
+        crawled_data = Crawled_url_list()
+        crawled_data.url = page
+        crawled_data.title = title
+        try:
+            crawled_data.save()
+        except:
+            print("error while saving data")
 
     def crawl(self, url, max_depth):
         crawled = []
@@ -62,22 +73,6 @@ class Crawler(Thread):
                 next_depth = {}
                 depth += 1
         self.remove_overlapped_titles_and_urls()
-        # return crawled
-
-    def get_title(self, page_url):
-        try:
-            f = urllib.request.urlopen(page_url)
-        except:
-            return "No text"
-        soup = BeautifulSoup(f, "html.parser")
-        return soup.title.string
-
-    def get_titles_from_urls(self, urls):
-        titles_and_urls = []
-        for url in urls:
-            title = get_title(url)
-            titles_and_urls.append((title, url))
-        return titles_and_urls
 
     def select_by_title(self, title):
         for reg in self.patterns:
@@ -85,42 +80,40 @@ class Crawler(Thread):
                 return True
         else:
             return False
-           
-    def set_into_database(self):
-        to_save = []
-        for i in self.titles_and_urls:
-            pass
-
 
     def get_titles_and_urls(self):
-        # print(Url_list.__str__())
-        f = []
+        print("crawl finish")
         for i in self.titles_and_urls:
            ut = Url_list()
            if i[0]:
               if self.select_by_title(i[0]):
                   ut.url = i[1]
                   ut.title = i[0]
-                  f.append((i[0],i[1]))
-                  ut.save()
+                  try:
+                      ut.save()
+                  except:
+                      print("error")
            else:
-               ut.url = i[1]
-               ut.title = ""
-               f.append(("unkown",i[1]))
-               ut.save()
+               next
         return f
 
-#hatena = Crawler()
-#max_depth = 2
-#target_url = "http://b.hatena.ne.jp/search/text?q=%E3%82%BB%E3%82%AD%E3%83%A5%E3%83%AA%E3%83%86%E3%82%A3"
-# url_list = list(set(hatena.crawl(target_url, max_depth)))
-# title_url_set = get_titles_from_urls(url_list)
-# for i in title_url_set:
-#     if i[0] :
-#         print(i[0][:5] +" : "+ i[1])
-#     else:
-#         print("")
-#         print(i[1])
-#         print("")
-#hatena.crawl(target_url, max_depth)
-#hatena.show()
+    def set_into_database(self):
+        to_save = []
+        for i in self.titles_and_urls:
+            pass
+
+    # def get_title(self, page_url):
+    #     try:
+    #         f = urllib.request.urlopen(page_url)
+    #     except:
+    #         return "No text"
+    #     soup = BeautifulSoup(f, "html.parser")
+    #     return soup.title.string
+    #
+    # def get_titles_from_urls(self, urls):
+    #     titles_and_urls = []
+    #     for url in urls:
+    #         title = get_title(url)
+    #         titles_and_urls.append((title, url))
+    #     return titles_and_urls
+

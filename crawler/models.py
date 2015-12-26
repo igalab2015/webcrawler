@@ -11,3 +11,10 @@ class Url_list(models.Model):
 
     def __str__(self):
         return self.url
+
+class Crawled_url_list(models.Model):
+    url = models.CharField('URL', unique=True, null=False,max_length=255)
+    title = models.CharField("Title", max_length=255, blank=True)
+
+    def __str__(self):
+        return self.url
