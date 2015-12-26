@@ -6,12 +6,17 @@ from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from crawler.models import Url_list
+from django.views.generic import ListView
 
-# from crawler.crawl import Crawler
+class UrlListView(ListView):
+    model = Url_list
+    template_name = 'index.html'
+    context_object_name = 'index'
+    paginate_by = 10
+    def get_queryset(self):
+        return Url_list.objects.all().order_by('id')
 
-
-
-def urls_list(request):
+# def urls_list(request):
     # '''urlの一覧'''
     # hatena = Crawler()
     # max_depth = 1
@@ -23,7 +28,7 @@ def urls_list(request):
     #return HttpResponse(u'URLの一覧')
 
 
-    index = Url_list.objects.all().order_by('id')
-    return render_to_response('index.html',  # 使用するテンプレート
-                              {'index': index},       # テンプレートに渡すデータ
-                              context_instance=RequestContext(request))  # その他標準のコンテキスト
+    # index = Url_list.objects.all().order_by('id')
+    # return render_to_response('index.html',  # 使用するテンプレート
+    #                           {'index': index},       # テンプレートに渡すデータ
+    #                           context_instance=RequestContext(request))  # その他標準のコンテキスト

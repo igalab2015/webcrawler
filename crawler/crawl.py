@@ -22,6 +22,9 @@ class Crawler(Thread):
             self.get_titles_and_urls()
             time.sleep(10)
 
+    def remove_overlapped_titles_and_urls(self):
+        self.titles_and_urls = list(set(self.titles_and_urls))
+
     def jubge_url(self, url):
         if url[0:4] == 'http' and url[-5:] == '.html':
             return True
@@ -58,6 +61,7 @@ class Crawler(Thread):
                 tocrawl = next_depth
                 next_depth = {}
                 depth += 1
+        self.remove_overlapped_titles_and_urls()
         # return crawled
 
     def get_title(self, page_url):
@@ -75,14 +79,6 @@ class Crawler(Thread):
             titles_and_urls.append((title, url))
         return titles_and_urls
 
-#    def show(self):
-#        for i in self.titles_and_urls:
-#            if i[0] :
-#                print(i[0][:5] +" : "+ i[1])
-#            else:
-#                print(i[1])
-#                print("")
-
     def select_by_title(self, title):
         for reg in self.patterns:
             if reg.search(title):
@@ -90,7 +86,14 @@ class Crawler(Thread):
         else:
             return False
            
+    def set_into_database(self):
+        to_save = []
+        for i in self.titles_and_urls:
+            pass
+
+
     def get_titles_and_urls(self):
+        # print(Url_list.__str__())
         f = []
         for i in self.titles_and_urls:
            ut = Url_list()
