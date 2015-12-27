@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from webcrawler.celery import app
 from celery.task import task
 import urllib.request
 from bs4 import BeautifulSoup
 from crawler.models import Url_list, Crawled_url_list
+from celery.schedules import crontab
 import re
 
 class Crawler(object):
@@ -14,7 +17,7 @@ class Crawler(object):
         self.target_url = target_url
         self.max_depth = max_depth
         self.data_number = 0
-        self.patterns = [re.compile(word) for word in words_about_security]
+        self.patterns = [re.compile(word) for word in self.words_about_security]
 
     def jubge_url(self, url):
         if url[0:4] == 'http' and url[-5:] == '.html':
@@ -48,17 +51,17 @@ class Crawler(object):
         crawled_data.title = title
         try:
             crawled_data.save()
-            self.data_number += 1
-            print("successfully setting data" + self.data_number)
+            print("successfully setting data" + str(self.data_number))
         except:
             print("error !!")
+        self.data_number += 1
 
-    def crawl(self, url, max_depth):
+    def crawl(self):
         crawled = []
-        tocrawl = [url]
+        tocrawl = [self.target_url]
         next_depth = []
         depth = 0
-        while tocrawl and depth <= max_depth:
+        while tocrawl and depth <= self.max_depth:
             page = tocrawl.pop()
             if page not in crawled:
                 next_depth = list(set(next_depth).union(set(self.get_all(page))))
@@ -66,8 +69,8 @@ class Crawler(object):
             if not tocrawl:
                 tocrawl = next_depth
                 next_depth = {}
+                print("depth " + str(depth) + " finished")
                 depth += 1
-            print("depth" + (depth - 1) + "finished")
 
     def select_by_title(self, title):
         for reg in self.patterns:
@@ -84,7 +87,7 @@ class Crawler(object):
             time.sleep(2)
         return titles_and_urls
 
-    def set_titles_and_urls_to_show(self, title):
+    def set_titles_and_urls_to_show(self):
         for pair in Crawled_url_list.objects.all():
            ut = Url_list()
            if pair.title:
@@ -97,4 +100,12 @@ class Crawler(object):
                       print("Error occured while saving selected data")
            else:
                next
+
+@app.task
+def run_crawler():
+    max_depth = 2
+    target_url = "http://b.hatena.ne.jp/search/text?q=%E3%82%BB%E3%82%AD%E3%83%A5%E3%83%AA%E3%83%86%E3%82%A3"
+    hatena = Crawler(target_url, max_depth)
+    hatena.crawl()
+    hatena.set_titles_and_urls_to_show()
 

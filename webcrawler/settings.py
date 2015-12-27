@@ -25,7 +25,7 @@ SECRET_KEY = 'o8iie76=_2aa21wsk6sf2k!v0^gz83v$7da^sv1op!v&4cj9b+'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
 
 # Application definition
@@ -38,7 +38,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'bootstrapform',
-    'crawler'
+    'djcelery',
+    'kombu.transport.django',
+    'crawler',
 ]
 
 MIDDLEWARE_CLASSES = [
@@ -133,3 +135,11 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, "static"),
 )
+
+BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis'
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_ACCEPT_CONTENT = ['json']
+
+from webcrawler.schedule import CELERYBEAT_SCHEDULE

@@ -2,16 +2,47 @@
 
 {% block content %}
 <h2 class="page-header">News</h2>
-<ul class="url_list">
-  <p>Title</p>
+<ul class="list-group">
   {% for ele in index %}
-    <li style="list-style:none">
+    <li crass="list-group-item" style="list-style:none">
       <span class="content">
-           <a href= "{{ ele.url }}">
+           <a class="list-group-item list-group-item" href= "{{ ele.url }}">
              {{ ele.title }}
            </a>
       </span>
     </li>
   {% endfor %}
 </ul>
+
+
+{% if is_paginated %}
+<div class="paginate">
+  <nav>
+    <ul class="pagination">
+      <li>
+        {% if page_obj.has_previous %}
+        <span><a href="?page={{ page_obj.previous_page_number }}">«</a></span>
+        {% endif %}
+      </li>
+        {% for page_num in page_obj.paginator.page_range %}
+      <li class="active">
+        {% if page_obj.number == page_num %}
+        <span>{{ page_num }}</span>
+      </li>
+        {% else %}
+      <li>
+        <span><a href="?page={{ page_num }}">{{ page_num }}</a></span>
+      </li>
+        {% endif %}
+        {% endfor %}
+        {% if page_obj.has_next %}
+      <li>
+        <span><a href="?page={{ page_obj.next_page_number }}">»</a></span>
+      </li>
+        {% endif %}
+    </ul>
+  </nav>
+</div>
+{% endif %}
+
 {% endblock content %}

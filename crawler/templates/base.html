@@ -10,13 +10,18 @@
 <script src="{% static 'js/jquery-2.1.4.min.js' %}"></script>
 <script src="{% static 'js/bootstrap.min.js' %}"></script>
 {% block extrahead %}{% endblock %}
-</head>
-<body>
-  <header class="navbar">
-   <div class="container">
-     <div id="logo">SecurityInfo</div>
-   </div>
-  </header>
+
+  <nav class="navbar navbar-default">
+  	<div class="container-fluid">
+  		<div class="navbar-header">
+
+  			<a class="navbar-brand">
+  				<img alt="Brand" src="{% static 'jpg/driba.jpg' %}" style="height: 20px;">
+  			</a>
+  		</div>
+      <p class="navbar-text">SecurityInfomation KIT</p>
+		</div>
+  </nav>
 
   <div class="container">
     {% block content %}

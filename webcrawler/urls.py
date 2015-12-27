@@ -16,18 +16,16 @@ Including another URLconf
 """
 from django.conf.urls import include, url
 from django.contrib import admin
-# from threading import Thread
-# import time
-from crawler.crawl import Crawler
 #from crawler import urls
+from crawler.crawl import Crawler
 
 urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
-    url(r'^crawler/', include('crawler.urls', namespace='crawler')),
+    url(r'', include('crawler.urls', namespace='crawler')),
 ]
 
-target_url = "http://b.hatena.ne.jp/search/text?q=%E3%82%BB%E3%82%AD%E3%83%A5%E3%83%AA%E3%83%86%E3%82%A3"
-max_depth = 2
-hatena = Crawler(target_url, max_depth)
-hatena.start()
 
+#target_url = "http://b.hatena.ne.jp/search/text?q=%E3%82%BB%E3%82%AD%E3%83%A5%E3%83%AA%E3%83%86%E3%82%A3"
+#max_depth = 1
+#hatena = Crawler(target_url, max_depth)
+#hatena.start()
