@@ -7,7 +7,7 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 from crawler.models import Url_list
 from django.views.generic import ListView
-from crawler.crawl import Crawler
+# from crawler.crawl import Crawler
 
 class UrlListView(ListView):
         #'''urlの一覧'''

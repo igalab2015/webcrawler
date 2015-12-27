@@ -87,18 +87,14 @@ class Crawler(object):
 
     def set_titles_and_urls_to_show(self):
         for pair in Crawled_url_list.objects.all():
-           ut = Url_list()
-           if pair.title:
-               if self.select_by_title(pair.title):
-                  ut.url = pair.url
-                  ut.title = pair.title
-                  try:
-                      ut.save()
-                  except:
-                      # print("Error occured while saving selected data")
-                      pass
-           else:
-               next
+            if pair.title:
+                if Url_list.objects.all().filter(url=pair.url):
+                    next
+                if self.select_by_title(pair.title):
+                    ut = Url_list()
+                    ut.url = pair.url
+                    ut.title = pair.title
+                    ut.save()
 
 
 @app.task
