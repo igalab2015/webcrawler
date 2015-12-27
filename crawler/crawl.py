@@ -49,9 +49,10 @@ class Crawler(object):
         try:
             crawled_data.save()
             self.data_number += 1
-            print("successfully setting data" + self.data_number)
+            # print("successfully setting data" + self.data_number)
         except:
-            print("error !!")
+            # print("error !!")
+            pass
 
     def crawl(self, url, max_depth):
         crawled = []
@@ -66,8 +67,8 @@ class Crawler(object):
             if not tocrawl:
                 tocrawl = next_depth
                 next_depth = {}
+                # print("depth " + (depth - 1) + " finished")
                 depth += 1
-            print("depth" + (depth - 1) + "finished")
 
     def select_by_title(self, title):
         for reg in self.patterns:
@@ -94,7 +95,8 @@ class Crawler(object):
                   try:
                       ut.save()
                   except:
-                      print("Error occured while saving selected data")
+                      # print("Error occured while saving selected data")
+                      pass
            else:
                next
 

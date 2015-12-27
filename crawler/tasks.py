@@ -51,10 +51,8 @@ class Crawler(object):
         crawled_data.title = title
         try:
             crawled_data.save()
-            print("successfully setting data" + str(self.data_number))
         except:
-            print("error !!")
-        self.data_number += 1
+            pass
 
     def crawl(self):
         crawled = []
@@ -69,7 +67,7 @@ class Crawler(object):
             if not tocrawl:
                 tocrawl = next_depth
                 next_depth = {}
-                print("depth " + str(depth) + " finished")
+                # print("depth " + str(depth) + " finished")
                 depth += 1
 
     def select_by_title(self, title):
@@ -97,15 +95,18 @@ class Crawler(object):
                   try:
                       ut.save()
                   except:
-                      print("Error occured while saving selected data")
+                      # print("Error occured while saving selected data")
+                      pass
            else:
                next
 
+
 @app.task
 def run_crawler():
-    max_depth = 2
+    max_depth = 1
     target_url = "http://b.hatena.ne.jp/search/text?q=%E3%82%BB%E3%82%AD%E3%83%A5%E3%83%AA%E3%83%86%E3%82%A3"
     hatena = Crawler(target_url, max_depth)
     hatena.crawl()
     hatena.set_titles_and_urls_to_show()
+    # print("crawl finished")
 
