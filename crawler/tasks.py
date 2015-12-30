@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 from __future__ import absolute_import
+from urllib.parse import urlparse
 from webcrawler.celery import app
 from celery.task import task
 import urllib.request
@@ -10,13 +10,14 @@ import re
 
 class Crawler(object):
 
-    words_about_security = ['マルウェア']
+    words_about_security = []
 
     def __init__(self, target_url, max_depth):
         super(Crawler, self).__init__()
         self.target_url = target_url
         self.max_depth = max_depth
-        self.data_number = 0
+        # self.data_number = 0
+        self.setup_dictionary()
         self.patterns = [re.compile(word) for word in self.words_about_security]
 
     def crawl(self):
@@ -45,7 +46,7 @@ class Crawler(object):
         # last_modified = page.info()['Last-Modified'] 
         # if self.set_crawled_urls_and_titles_and_lastmodified(page_url, title, last_modified):
         if self.set_crawled_urls_and_titles_and_lastmodified(page_url, title):
-            return self.get_all_link(soup)
+            return self.get_all_link(soup, page_url)
         else:
             return []
 
@@ -68,15 +69,23 @@ class Crawler(object):
         else:
             return False
 
-    def get_all_link(self, soup):
+    def get_all_link(self, soup, current_url):
         links = []
         for atag in soup.find_all('a'):
             link = atag.get('href')
             if not link:
                 continue
-            if self.jubge_url(link):
-                links.append(link)
+            links.append(self.get_absolute_path(current_url, link))
         return links
+
+    def get_absolute_path(self, current_url, link):
+        parsed_link = urlparse(link)
+        if parsed_link.scheme:
+            return link   
+        else:
+            if current_url[-1] == '/':
+                current_url = current_url[:-1]
+            return current_url + parsed_link.path
 
     def jubge_url(self, url):
         if url[0:4] == 'http' and url[-5:] == '.html':
@@ -110,11 +119,23 @@ class Crawler(object):
     #         time.sleep(2)
     #     return titles_and_urls
 
+    def setup_dictionary(self):
+        dict_url = 'http://e-words.jp/p/t-Security.html'
+        try:
+            page = urllib.request.urlopen(dict_url)
+        except:
+            pass
+        soup = BeautifulSoup(page, "html.parser")
+        for atag in soup.find_all('a'):
+            word = atag.string
+            if word:
+                self.words_about_security.append(word)
 
 @app.task
 def run_crawler():
     max_depth = 1
     target_url = "http://b.hatena.ne.jp/search/text?q=%E3%82%BB%E3%82%AD%E3%83%A5%E3%83%AA%E3%83%86%E3%82%A3"
+    # target_url = "http://japan.zdnet.com/"
     hatena = Crawler(target_url, max_depth)
     hatena.crawl()
     hatena.set_titles_and_urls_to_show()
