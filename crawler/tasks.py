@@ -6,6 +6,7 @@ import urllib.request
 from bs4 import BeautifulSoup
 from crawler.models import Url_list, Crawled_url_list
 from celery.schedules import crontab
+import hashlib
 import re
 
 class Crawler(object):
@@ -41,21 +42,47 @@ class Crawler(object):
             page = urllib.request.urlopen(page_url)
         except:
             return []
+
+        digest = hashlib.sha1(page.read()).hexdigest()
+        crawled_url_data = Crawled_url_list.objects.all().filter(url=page_url)
+        if crawled_url_data:
+            data = crawled_url_data[0]
+            if data.html_digest == digest:
+                print('HTML digest equals previous crawling')
+                return []
+            else:
+                self.update_digest(data, digest)
+                print('Digest updated')
+
         soup = BeautifulSoup(page, "html.parser")
-        title = soup.title.string
+        if soup.title:
+            title = soup.title.string
+        else:
+            return []
+
         # last_modified = page.info()['Last-Modified'] 
         # if self.set_crawled_urls_and_titles_and_lastmodified(page_url, title, last_modified):
-        if self.set_crawled_urls_and_titles_and_lastmodified(page_url, title):
+
+        if self.set_crawled_urls_and_titles_and_lastmodified(page_url, title, digest):
             return self.get_all_link(soup, page_url)
         else:
             return []
 
+    def update_digest(self, data, digest):
+        data.html_digest = digest
+        try:
+            data.save()
+        except:
+            pass
+        
     # def set_crawled_urls_and_titles_and_lastmodified(self, page_url, title, last_modified):
-    def set_crawled_urls_and_titles_and_lastmodified(self, page_url, title):
+    def set_crawled_urls_and_titles_and_lastmodified(self, page_url, title, digest):
         if title:
             crawled_data = Crawled_url_list()
             crawled_data.url = page_url
             crawled_data.title = title
+            crawled_data.html_digest = digest
+            
             # if last_modified:
             #     crawled_data.last_modified = last_modified
             #     print('Successfully get last modified info')
@@ -111,14 +138,6 @@ class Crawler(object):
         else:
             return False
 
-    # def get_titles_from_urls(self, urls):
-    #     titles_and_urls = []
-    #     for url in urls:
-    #         title = get_title(url)
-    #         titles_and_urls.append((title, url))
-    #         time.sleep(2)
-    #     return titles_and_urls
-
     def setup_dictionary(self):
         dict_url = 'http://e-words.jp/p/t-Security.html'
         try:
@@ -131,13 +150,19 @@ class Crawler(object):
             if word:
                 self.words_about_security.append(word)
 
+class JVN(Crawler):
+    def __init__(self):
+        self.target_url = 'https://jvn.jp/'
+        self.max_depth = 1
+
 @app.task
 def run_crawler():
     max_depth = 1
     target_url = "http://b.hatena.ne.jp/search/text?q=%E3%82%BB%E3%82%AD%E3%83%A5%E3%83%AA%E3%83%86%E3%82%A3"
     # target_url = "http://japan.zdnet.com/"
     hatena = Crawler(target_url, max_depth)
+    print('crawl start')
     hatena.crawl()
     hatena.set_titles_and_urls_to_show()
-    print("crawl finished")
+    print('crawl finished')
 

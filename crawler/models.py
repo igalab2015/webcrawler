@@ -15,7 +15,16 @@ class Url_list(models.Model):
 class Crawled_url_list(models.Model):
     url = models.URLField('URL', unique=True, null=False,max_length=255)
     title = models.CharField('Title', max_length=255, blank=True)
+    html_digest = models.CharField('Hash', max_length=255, blank=True)
     # last_modified = models.DateTimeField('last_modified', blank=True)
 
     def __str__(self):
         return self.url
+
+class JVN_list(models.Model):
+    url = models.URLField('URL', unique=True, null=False,max_length=255)
+    title = models.CharField('Title', max_length=255, blank=True)
+    date = models.DateTimeField('YearDateTime')
+    def __str__(self):
+        return self.url
+
