@@ -28,3 +28,7 @@ class JVN_list(models.Model):
     def __str__(self):
         return self.url
 
+class Dictionary_about_security(models.Model):
+    word = models.CharField('word', max_length=63)
+    def __str__(self):
+        return self.word

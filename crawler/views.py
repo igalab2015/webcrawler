@@ -22,7 +22,7 @@ class UrlListView(ListView):
         #target_url = "http://b.hatena.ne.jp/search/text?q=%E3%82%BB%E3%82%AD%E3%83%A5%E3%83%AA%E3%83%86%E3%82%A3"
         #hatena.crawl(target_url, max_depth)
         #hatena.get_titles_and_urls()
-        return Url_list.objects.all().order_by('id')
+        return Url_list.objects.all().order_by('-id')
 
 #def urls_list(request):
 

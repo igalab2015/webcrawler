@@ -4,22 +4,25 @@ from webcrawler.celery import app
 from celery.task import task
 import urllib.request
 from bs4 import BeautifulSoup
-from crawler.models import Url_list, Crawled_url_list
+from crawler.models import Url_list, Crawled_url_list, Dictionary_about_security
 from celery.schedules import crontab
 import hashlib
 import re
 
 class Crawler(object):
 
-    words_about_security = []
-
     def __init__(self, target_url, max_depth):
         super(Crawler, self).__init__()
         self.target_url = target_url
         self.max_depth = max_depth
         # self.data_number = 0
-        self.setup_dictionary()
-        self.patterns = [re.compile(word) for word in self.words_about_security]
+        self.patterns = [re.compile(word) for word in self.dictionary_from_database()]
+
+    def dictionary_from_database(self):
+        words = []
+        for data in Dictionary_about_security.objects.all():
+            words.append(data.word)
+        return words
 
     def crawl(self):
         crawled = []
@@ -138,17 +141,29 @@ class Crawler(object):
         else:
             return False
 
-    def setup_dictionary(self):
-        dict_url = 'http://e-words.jp/p/t-Security.html'
+class Dictionary(object):
+    black_list_of_words = ['Incept Inc.', '記号・数字']
+    def __init__(self, url):
+        self.dict_url = url
+
+    def update_dictionary(self):
         try:
-            page = urllib.request.urlopen(dict_url)
+            page = urllib.request.urlopen(self.dict_url)
         except:
-            pass
+            print('can\'t open '+ self.dict_url)
+            return
         soup = BeautifulSoup(page, "html.parser")
         for atag in soup.find_all('a'):
             word = atag.string
             if word:
-                self.words_about_security.append(word)
+                if word in self.black_list_of_words:
+                    continue
+                try:
+                    ut = Dictionary_about_security()
+                    ut.word = word
+                    ut.save()
+                except:
+                    pass
 
 class JVN(Crawler):
     def __init__(self):
@@ -166,3 +181,11 @@ def run_crawler():
     hatena.set_titles_and_urls_to_show()
     print('crawl finished')
 
+# update dictionary about security
+@app.task
+def update_dictionary():
+    dict_url = 'http://e-words.jp/p/t-Security.html'
+    ewords_dictionary = Dictionary(dict_url)
+    print('updating dictionary start')
+    ewords_dictionary.update_dictionary()
+    print('updating dictionary finished')
