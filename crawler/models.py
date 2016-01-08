@@ -29,6 +29,6 @@ class JVN_list(models.Model):
         return self.url
 
 class Dictionary_about_security(models.Model):
-    word = models.CharField('word', max_length=63)
+    word = models.CharField('word', max_length=63, unique=True)
     def __str__(self):
         return self.word

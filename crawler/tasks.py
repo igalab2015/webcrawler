@@ -12,13 +12,13 @@ import re
 class Crawler(object):
 
     def __init__(self, target_url, max_depth):
-        super(Crawler, self).__init__()
+        # target url is seed's url
         self.target_url = target_url
         self.max_depth = max_depth
-        # self.data_number = 0
         self.patterns = [re.compile(word) for word in self.dictionary_from_database()]
 
     def dictionary_from_database(self):
+        # create dictionary of words about security using Dictionary_about_security
         words = []
         for data in Dictionary_about_security.objects.all():
             words.append(data.word)
@@ -31,13 +31,15 @@ class Crawler(object):
         depth = 0
         while tocrawl and depth <= self.max_depth:
             page = tocrawl.pop()
+            # if page is not checked yet, crawl it
             if page not in crawled:
+                # set list to crawl at next depth
+                # remove 
                 next_depth = list(set(next_depth).union(set(self.scrape(page))))
                 crawled.append(page)
             if not tocrawl:
                 tocrawl = next_depth
-                next_depth = {}
-                # print("depth " + str(depth) + " finished")
+                next_depth = []
                 depth += 1
 
     def scrape(self, page_url):
@@ -142,6 +144,7 @@ class Crawler(object):
             return False
 
 class Dictionary(object):
+
     black_list_of_words = ['Incept Inc.', '記号・数字']
     def __init__(self, url):
         self.dict_url = url
@@ -189,3 +192,4 @@ def update_dictionary():
     print('updating dictionary start')
     ewords_dictionary.update_dictionary()
     print('updating dictionary finished')
+
