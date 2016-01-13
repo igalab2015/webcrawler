@@ -8,9 +8,13 @@ from crawler.models import Url_list, Crawled_url_list, Dictionary_about_security
 from celery.schedules import crontab
 import hashlib
 import re
+from datetime import datetime 
+from socket import timeout 
 
 # for print debug
 MYDEBUG = True
+# for log file debug
+MYLOG = True
 
 class Crawler(object):
 
@@ -50,8 +54,10 @@ class Crawler(object):
     # scrape html
     def scrape(self, page_url):
         try:
-            page = urllib.request.urlopen(page_url)
-        except:
+            page = urllib.request.urlopen(page_url, timeout=10)
+        except timeout:
+            print('socket timed out - URL %s', page_url)
+        else:
             return []
 
         page_html = page.read()
@@ -64,21 +70,21 @@ class Crawler(object):
         if crawled_url_data:
             data = crawled_url_data[0]
             if data.html_digest == digest:
-                if MYDEBUG:
-                    print('HTML digest equals previous crawling')
+                if MYLOG:
+                    self.write_log(' ', page_url + ' skipped')
                 return []
             else:
                 self.update_digest(data, digest)
-                if MYDEBUG:
-                    print('Digest updated')
+                if MYLOG:
+                    self.write_log('', page_url + ' Digest updated')
 
         # create soup object and confirm whether title exists or not
         soup = BeautifulSoup(page_html, "html.parser")
         if soup.title:
             title = soup.title.string
         else:
-            if MYDEBUG:
-                print('there isn\'t title')
+            # if MYDEBUG:
+            #     print('there isn\'t title')
             return []
 
         # save data and return all link
@@ -102,8 +108,8 @@ class Crawler(object):
             crawled_data.html_digest = digest
             try:
                 crawled_data.save()
-                if MYDEBUG:
-                    print('set '+ page_url)
+                if MYLOG:
+                    self.write_log('', page_url + ' saved')
             except:
                 pass
             return True
@@ -162,6 +168,12 @@ class Crawler(object):
         else:
             return False
 
+    # save log into crawler.log
+    def write_log(self, mark, log_text):
+        with open('crawler.log','a') as log:
+            log.write(mark + datetime.now().strftime('%Y/%m/%d %H:%M:%S') + ': ' + log_text + '\n')
+        log.close()
+
 class Dictionary(object):
     black_list_of_words = ['Incept Inc.', '記号・数字']
     def __init__(self, url):
@@ -189,15 +201,21 @@ class Dictionary(object):
 
 @app.task
 def run_crawler():
-    max_depth = 1
-    target_url = "http://b.hatena.ne.jp/search/text?q=%E3%82%BB%E3%82%AD%E3%83%A5%E3%83%AA%E3%83%86%E3%82%A3"
-    # target_url = "http://japan.zdnet.com"
-    # target_url = 'http://gigazine.net'
-    hatena = Crawler(target_url, max_depth)
-    print('crawl start')
-    hatena.crawl()
-    hatena.set_titles_and_urls_to_show()
-    print('crawl finished')
+    seed_sites_url = ['http://b.hatena.ne.jp/search/text?q=%E3%82%BB%E3%82%AD%E3%83%A5%E3%83%AA%E3%83%86%E3%82%A3', 'http://japan.zdnet.com', 'https://jvn.jp/']
+    max_depth = 2
+    if MYDEBUG:
+        print('crawl start')
+    for seed in seed_sites_url:
+        if MYDEBUG:
+            print(seed)
+        crawler = Crawler(seed, max_depth)
+        crawler.crawl()
+        crawler.set_titles_and_urls_to_show()
+        if MYDEBUG:
+            print(seed)
+    crawler.write_log('--- ', 'crawl finished\n')
+    if MYDEBUG:
+        print('crawl finished')
 
 # update dictionary about security
 @app.task
