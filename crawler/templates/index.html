@@ -7,8 +7,10 @@
     <li crass="list-group-item" style="list-style:none">
       <span class="content">
            <a class="list-group-item list-group-item" href= "{{ ele.url }}">
-             {{ ele.title }}
+             <p class="lead">{{ ele.title }}</p>
+             <small> {{ ele.url }} </small>
            </a>
+
       </span>
     </li>
   {% endfor %}

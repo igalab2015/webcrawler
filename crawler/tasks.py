@@ -8,11 +8,11 @@ from crawler.models import Url_list, Crawled_url_list, Dictionary_about_security
 from celery.schedules import crontab
 import hashlib
 import re
-from datetime import datetime 
-from socket import timeout 
+from datetime import datetime
+from socket import timeout
 
 # for print debug
-MYDEBUG = True
+MYDEBUG = False
 # for log file debug
 MYLOG = True
 
@@ -22,6 +22,7 @@ class Crawler(object):
         # target url is seed's url
         self.target_url = target_url
         self.max_depth = max_depth
+        self.reg_question_mark = re.compile('\?')
 
     def dictionary_from_database(self):
         # create dictionary of words about security using Dictionary_about_security
@@ -42,7 +43,7 @@ class Crawler(object):
             # if page is not checked yet, crawl it
             if page not in crawled:
                 # set list to crawl at next depth
-                # remove overlapped elements 
+                # remove overlapped elements
                 # scrape page
                 next_depth = list(set(next_depth).union(set(self.scrape(page))))
                 crawled.append(page)
@@ -53,13 +54,20 @@ class Crawler(object):
 
     # scrape html
     def scrape(self, page_url):
+        headers = { "User-Agent" :  "Mozilla/4.0 (compatible; MSIE 5.5; Windows NT)" }
         try:
-            page = urllib.request.urlopen(page_url, timeout=10)
-        except timeout:
-            print('socket timed out - URL %s', page_url)
-        else:
-            return []
+            # print('try urlopen: '+ page_url)
+            req = urllib.request.Request(page_url, None, headers)
+            page = urllib.request.urlopen(req)
 
+            # print('success! urlopen!: '+ page_url)
+        except:
+            # print('error urlopen: '+ page_url)
+            return []
+        #else:
+        #    print('else urlopen')
+        #    return []
+        # print('scraope---------------------')
         page_html = page.read()
 
         # calculate hash of page's html
@@ -99,7 +107,7 @@ class Crawler(object):
             data.save()
         except:
             pass
-    
+
     def set_crawled_urls_and_titles_and_digest(self, page_url, title, digest):
         if title:
             crawled_data = Crawled_url_list()
@@ -124,7 +132,8 @@ class Crawler(object):
             if not link:
                 continue
             abs_path = self.get_absolute_path(current_url, link)
-            links.append(self.remove_trailing_slash(abs_path))
+            if not self.reg_question_mark.search(abs_path):   
+                links.append(self.remove_trailing_slash(abs_path))
         return links
 
     def remove_trailing_slash(self, url):
@@ -137,7 +146,7 @@ class Crawler(object):
     def get_absolute_path(self, current_url, link):
         parsed_link = urlparse(link)
         if parsed_link.scheme:
-            return link 
+            return link
         else:
             if current_url[-1] == '/':
                 current_url = current_url[:-1]
@@ -156,7 +165,7 @@ class Crawler(object):
                     ut.save()
 
     def select_by_title(self, title):
-        black_word = ['はてなブックマーク'] 
+        black_word = ['はてなブックマーク', 'はてな検索']
         patterns_for_excluding = [re.compile(word) for word in black_word]
 
         for reg_black in patterns_for_excluding:
@@ -174,8 +183,10 @@ class Dictionary(object):
         self.dict_url = url
 
     def update_dictionary(self):
+        headers = { "User-Agent" :  "Mozilla/4.0 (compatible; MSIE 5.5; Windows NT)" }
         try:
-            page = urllib.request.urlopen(self.dict_url)
+            req = urllib.request.Request(self.dict_url, None, headers)
+            page = urllib.request.urlopen(req)
         except:
             if MYDEBUG:
                 print('can\'t open '+ self.dict_url)
@@ -201,7 +212,7 @@ def write_log(mark, log_text):
 
 @app.task
 def run_crawler():
-    seed_sites_url = ['http://b.hatena.ne.jp/search/text?q=%E3%82%BB%E3%82%AD%E3%83%A5%E3%83%AA%E3%83%86%E3%82%A3', 'http://japan.zdnet.com', 'https://jvn.jp']
+    seed_sites_url = ['http://b.hatena.ne.jp/ctop/it', 'http://japan.zdnet.com', 'https://jvn.jp']
     max_depth = 2
     if MYLOG:
         write_log('-----', ' crawl start')
@@ -226,4 +237,3 @@ def update_dictionary():
     ewords_dictionary.update_dictionary()
     if MYLOG:
         write_log('---', ' updating dictionary finished')
-
