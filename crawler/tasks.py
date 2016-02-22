@@ -213,7 +213,7 @@ def write_log(mark, log_text):
 @app.task
 def run_crawler():
     seed_sites_url = ['http://b.hatena.ne.jp/ctop/it', 'http://japan.zdnet.com', 'https://jvn.jp']
-    max_depth = 2
+    max_depth = 2  # depth to crawl
     if MYLOG:
         write_log('-----', ' crawl start')
     for seed in seed_sites_url:
